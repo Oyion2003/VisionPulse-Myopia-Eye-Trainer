@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Myopia Eye Trainer Ultimate</title>
+<title>VisionPulse – Myopia Eye Trainer</title>
 <style>
 :root {
   --bg:#0a0f1c;
@@ -26,14 +26,14 @@ button{margin:4px;padding:6px 10px;border:none;border-radius:6px;background:var(
 .sidebar.hidden{transform:translateX(-100%)}
 .main{flex:1;display:flex;flex-direction:column;align-items:center}
 .exercise-box{margin:10px auto;width:90vw;height:70vh;max-width:1100px;max-height:800px;background:#020617;border-radius:16px;position:relative;border:1px solid #1e293b}
-.dot{position:absolute;border-radius:50%;box-shadow:0 0 10px rgba(34,197,94,0.6)}
+.dot{position:absolute;border-radius:50%;box-shadow:0 0 10px rgba(34,197,94,0.6);width:20px;height:20px;background:hsl(0,70%,60%);left:calc(50% - 10px);top:calc(50% - 10px);}
 input[type=range]{width:100%}
 .topbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
 </style>
 </head>
 <body>
 <header>
-  Myopia Eye Trainer Ultimate
+  VisionPulse – Myopia Eye Trainer
   <div id="headerButtons">
     <button onclick="goHome()">🏠 Home</button>
     <button onclick="goBack()">⬅ Back</button>
@@ -96,7 +96,7 @@ for(let i=0;i<40;i++){
     name:names[i%10]+" "+(i+1),
     type:types[i%10],
     color:`hsl(${i*9},70%,60%)`,
-    size:14
+    size:20
   });
 }
 
@@ -170,11 +170,11 @@ function nextExercise(){
 
 function startExercise(ex){
   clearInterval(interval); currentEx=ex;
-  document.getElementById("exerciseName").innerText=ex.name;
   const dot=document.getElementById("dot"), box=document.getElementById("box");
   dot.style.background=ex.color;
-  dot.style.width=ex.size+"px";
-  dot.style.height=ex.size+"px";
+  dot.style.width=currentEx.size+"px";
+  dot.style.height=currentEx.size+"px";
+
   let t=0;
   interval=setInterval(()=>{
     const speed=parseFloat(document.getElementById("speedSlider").value);
@@ -193,7 +193,8 @@ function startExercise(ex){
       case"infinity": x=cx+r*Math.sin(t); y=cy+(r/2)*Math.sin(2*t); break;
       case"box": x=cx+r*Math.sign(Math.sin(t)); y=cy+r*Math.sign(Math.cos(t)); break;
     }
-    dot.style.left=x+"px"; dot.style.top=y+"px";
+    dot.style.left=Math.min(Math.max(x,0), w - currentEx.size) + "px";
+    dot.style.top=Math.min(Math.max(y,0), h - currentEx.size) + "px";
     t+=speed;
   },30);
 }
