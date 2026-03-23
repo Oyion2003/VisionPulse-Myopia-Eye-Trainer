@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Myopia Eye Trainer Ultimate</title>
+<style>
+:root {
+  --bg:#0a0f1c;
+  --panel:#0f172a;
+  --card:#111827;
+  --accent:#22c55e;
+  --text:#cbd5f5;
+}
+body{margin:0;font-family:Segoe UI,Arial;background:var(--bg);color:var(--text)}
+header{background:#020617;padding:12px;text-align:center;font-size:20px;color:#94a3b8;display:flex;justify-content:space-between;align-items:center;}
+header div{display:flex;gap:8px}
+button{margin:4px;padding:6px 10px;border:none;border-radius:6px;background:var(--accent);cursor:pointer;color:#022c22}
+.container{padding:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.card{background:var(--card);padding:10px;border-radius:10px;cursor:pointer}
+.card.selected{outline:2px solid var(--accent)}
+.card h4{margin:5px 0}
+.app{display:flex;height:calc(100vh - 48px)}
+.sidebar{width:260px;background:var(--panel);padding:10px;overflow:auto;transition:transform .25s ease}
+.sidebar.hidden{transform:translateX(-100%)}
+.main{flex:1;display:flex;flex-direction:column;align-items:center}
+.exercise-box{margin:10px auto;width:90vw;height:70vh;max-width:1100px;max-height:800px;background:#020617;border-radius:16px;position:relative;border:1px solid #1e293b}
+.dot{position:absolute;border-radius:50%;box-shadow:0 0 10px rgba(34,197,94,0.6)}
+input[type=range]{width:100%}
+.topbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  Myopia Eye Trainer Ultimate
+  <div id="headerButtons">
+    <button onclick="goHome()">🏠 Home</button>
+    <button onclick="goBack()">⬅ Back</button>
+  </div>
+</header>
+
+<div class="container" id="home">
+<h2>Select Exercises</h2>
+<div class="grid" id="exerciseList"></div>
+<button onclick="startSelected()">Start Selected</button>
+<button onclick="showFavorites()">Favorites</button>
+</div>
+
+<div class="container" id="favorites" style="display:none">
+<h2>Favorites</h2>
+<div class="grid" id="favoritesList"></div>
+<button onclick="startFavorites()">Start Favorites</button>
+</div>
+
+<div id="trainer" style="display:none" class="app">
+<div class="sidebar" id="sidebar">
+<h3>Controls</h3>
+<button onclick="toggleSidebar()">Hide Panel</button>
+<hr>
+<label>Speed Control</label>
+<input type="range" min="0.01" max="0.2" step="0.01" value="0.05" id="speedSlider">
+<hr>
+<button onclick="changeSize(2)">Dot +</button>
+<button onclick="changeSize(-2)">Dot -</button>
+<input type="color" onchange="changeColor(this.value)">
+<hr>
+<button onclick="resizeBox(1)">Screen +</button>
+<button onclick="resizeBox(-1)">Screen -</button>
+<button onclick="changeWidth(50)">Width +</button>
+<button onclick="changeWidth(-50)">Width -</button>
+<button onclick="changeHeight(50)">Height +</button>
+<button onclick="changeHeight(-50)">Height -</button>
+<hr>
+<button onclick="toggleFullscreen()">Fullscreen</button>
+<button onclick="goHome()">⬅ Back Home</button>
+</div>
+
+<div class="main">
+<h2 id="exerciseName"></h2>
+<div class="exercise-box" id="box"><div class="dot" id="dot"></div></div>
+<div class="topbar">
+<button onclick="nextExercise()">Next</button>
+<button onclick="toggleSidebar()">☰ Panel</button>
+</div>
+</div>
+</div>
+
+<script>
+const names=["Horizontal","Vertical","Circle","Diagonal","Zigzag","Random","Spiral","Pulse","Infinity","Box"];
+const types=["horizontal","vertical","circle","diagonal","zigzag","random","spiral","pulse","infinity","box"];
+
+let allExercises=[];
+for(let i=0;i<40;i++){
+  allExercises.push({
+    name:names[i%10]+" "+(i+1),
+    type:types[i%10],
+    color:`hsl(${i*9},70%,60%)`,
+    size:14
+  });
+}
+
+let selected=[],favorites=[],currentIndex=-1,interval,currentEx;
+const list=document.getElementById("exerciseList");
+const favListContainer=document.getElementById("favoritesList");
+const headerButtons=document.getElementById('headerButtons');
+
+function renderList(arr, container){
+  container.innerHTML="";
+  arr.forEach((ex,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`<h4>${ex.name}</h4><button onclick='event.stopPropagation();toggleFav(${i})'>★</button>`;
+    div.onclick=()=>{
+      div.classList.toggle("selected");
+      if(selected.includes(i)) selected=selected.filter(x=>x!==i);
+      else selected.push(i);
+    };
+    container.appendChild(div);
+  });
+}
+renderList(allExercises,list);
+
+function toggleFav(i){
+  if(favorites.includes(i)) favorites=favorites.filter(x=>x!==i);
+  else favorites.push(i);
+}
+
+function showFavorites(){
+  document.getElementById('home').style.display='none';
+  document.getElementById('favorites').style.display='block';
+  renderList(favorites.map(i=>allExercises[i]), favListContainer);
+  headerButtons.style.display='flex';
+}
+
+function startFavorites(){
+  if(favorites.length===0) return alert('No favorites selected');
+  selected=favorites.map(i=>allExercises[i]);
+  document.getElementById('favorites').style.display='none';
+  document.getElementById('trainer').style.display='flex';
+  currentIndex=-1; nextExercise();
+}
+
+function startSelected(){
+  if(selected.length===0) return alert("Select at least one exercise");
+  document.getElementById("home").style.display="none";
+  document.getElementById("trainer").style.display="flex";
+  currentIndex=-1; nextExercise();
+}
+
+function goHome(){
+  clearInterval(interval);
+  document.getElementById('home').style.display='block';
+  document.getElementById('trainer').style.display='none';
+  document.getElementById('favorites').style.display='none';
+  headerButtons.style.display='none';
+}
+
+function goBack(){
+  if(document.getElementById('trainer').style.display==='flex') goHome();
+  else if(document.getElementById('favorites').style.display==='block') goHome();
+  else history.back();
+}
+window.onpopstate=function(){ goHome(); };
+
+function nextExercise(){
+  currentIndex++; if(currentIndex>=selected.length) currentIndex=0;
+  startExercise(selected[currentIndex]);
+}
+
+function startExercise(ex){
+  clearInterval(interval); currentEx=ex;
+  document.getElementById("exerciseName").innerText=ex.name;
+  const dot=document.getElementById("dot"), box=document.getElementById("box");
+  dot.style.background=ex.color;
+  dot.style.width=ex.size+"px";
+  dot.style.height=ex.size+"px";
+  let t=0;
+  interval=setInterval(()=>{
+    const speed=parseFloat(document.getElementById("speedSlider").value);
+    const w=box.offsetWidth, h=box.offsetHeight;
+    const cx=w/2, cy=h/2, r=Math.min(w,h)/2-30;
+    let x=cx, y=cy;
+    switch(ex.type){
+      case"horizontal": x=cx+r*Math.sin(t); break;
+      case"vertical": y=cy+r*Math.sin(t); break;
+      case"circle": x=cx+r*Math.cos(t); y=cy+r*Math.sin(t); break;
+      case"diagonal": x=cx+r*Math.sin(t); y=cy+r*Math.sin(t); break;
+      case"zigzag": x=(t*150)%w; y=(Math.floor(t)%2===0)?50:h-50; break;
+      case"random": x=Math.random()*w; y=Math.random()*h; break;
+      case"spiral": x=cx+(t*4)*Math.cos(t); y=cy+(t*4)*Math.sin(t); break;
+      case"pulse": dot.style.transform=`scale(${1+0.6*Math.sin(t)})`; break;
+      case"infinity": x=cx+r*Math.sin(t); y=cy+(r/2)*Math.sin(2*t); break;
+      case"box": x=cx+r*Math.sign(Math.sin(t)); y=cy+r*Math.sign(Math.cos(t)); break;
+    }
+    dot.style.left=x+"px"; dot.style.top=y+"px";
+    t+=speed;
+  },30);
+}
+
+function changeSize(v){ currentEx.size+=v; if(currentEx.size<5) currentEx.size=5; document.getElementById("dot").style.width=currentEx.size+"px"; document.getElementById("dot").style.height=currentEx.size+"px"; }
+function changeColor(c){ currentEx.color=c; document.getElementById("dot").style.background=c; }
+function toggleFullscreen(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+function toggleSidebar(){ document.getElementById("sidebar").classList.toggle("hidden"); }
+function resizeBox(d){ const b=document.getElementById("box"); b.style.width=(b.offsetWidth+d*50)+"px"; b.style.height=(b.offsetHeight+d*40)+"px"; }
+function changeWidth(v){const b=document.getElementById("box"); b.style.width=(b.offsetWidth+v)+"px";}
+function changeHeight(v){const b=document.getElementById("box"); b.style.height=(b.offsetHeight+v)+"px";}
+</script>
+</body>
+</html>
