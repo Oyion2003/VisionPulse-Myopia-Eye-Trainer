@@ -36,7 +36,8 @@ input[type=range]{width:100%}
 .topbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
 .section{margin-bottom:15px}
 .section h3{margin:8px 0}
-#exerciseName{position:absolute;top:10px;left:50%;transform:translateX(-50%);color:#fff;font-size:24px;font-weight:bold;z-index:10;text-align:center;}
+#exerciseName{position:relative;top:-10px;color:#fff;font-size:24px;font-weight:bold;z-index:10;text-align:center;margin-bottom:10px}
+#screenControls button{display:block;margin:4px 0;width:100%}
 </style>
 </head>
 <body>
@@ -76,14 +77,14 @@ input[type=range]{width:100%}
 <h3>Speed Control</h3>
 <input type="range" min="0.01" max="0.2" step="0.01" value="0.05" id="speedSlider">
 </div>
-<div class="section">
+<div class="section" id="screenControls">
 <h3>Screen Controls</h3>
 <button onclick="resizeBox(1)">Screen +</button>
 <button onclick="resizeBox(-1)">Screen -</button>
-<button onclick="changeWidth(50)">Width +</button>
-<button onclick="changeWidth(-50)">Width -</button>
 <button onclick="changeHeight(50)">Height +</button>
 <button onclick="changeHeight(-50)">Height -</button>
+<button onclick="changeWidth(50)">Width +</button>
+<button onclick="changeWidth(-50)">Width -</button>
 <button onclick="toggleFullscreen()">Fullscreen</button>
 </div>
 <hr>
